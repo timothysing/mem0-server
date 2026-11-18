@@ -11,10 +11,11 @@ ARG MEM0_SHA
 WORKDIR /app
 COPY --from=src /mem0/server/ /app/
 COPY --from=src /mem0/ /tmp/mem0/
+COPY patch_main.py /tmp/patch_main.py
 # server deps, then the mem0 library from the SAME pinned commit (not whatever PyPI has)
 RUN pip install --no-cache-dir -r requirements.tx? \
  && pip install --no-cache-dir --force-reinstall --no-deps /tmp/mem0 && pip install --no-cache-dir /tmp/mem0 \
- && rm -rf /tmp/mem0 && python -c "import mem0, sqlalchemy, alembic, jose; print('imports ok')"
+ && python /tmp/patch_main.py && rm -rf /tmp/mem0 /tmp/patch_main.py && python -c "import mem0, sqlalchemy, alembic, jose; print('imports ok')"
 ENV PYTHONUNBUFFERED=1 MEM0_TELEMETRY=false MEM0_SHA=${MEM0_SHA}
 EXPOSE 8000
 CMD ["sh", "-c", "alembic upgrade head && exec uvicorn main:app --host 0.0.0.0 --port 8000"]
