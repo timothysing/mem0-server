@@ -7,7 +7,21 @@ permissions:
   contents: read
   packages: write
 jobs:
+  test:
+    # Scope enforcement is a security boundary (Phyllis's key must never read Herbie's
+    # rows), so the image is not built unless every denied path is still denied.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest starlette httpx
+      - run: pytest -q
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
